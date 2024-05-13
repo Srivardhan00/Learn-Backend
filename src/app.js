@@ -20,10 +20,15 @@ app.use(express.urlencoded(
         extended:true //for reading nested objects
     }
 )) 
-
 //to store assets, files, folders, etc
 app.use(express.static("public"))
-
 //to access user's cookies and perform CRUD operations on cookies
 app.use(cookieParser())
+
+
+//setup router
+import userRouter from "./Routes/users.route.js";
+
+app.use('/user', userRouter)
+
 export { app };
