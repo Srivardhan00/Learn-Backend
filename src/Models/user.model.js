@@ -72,4 +72,34 @@ userSchema.methods.passwordCheck = async function (password) {
   return await bcrypt.compare(password, this.password); //returns true or false after comparing, so takes time
 };
 
+userSchema.methods.generateAccessToken = function () {
+  return jwt.sign(
+    //payload
+    {
+      _id: this._id,
+      username: this.username,
+      email: this.email,
+    },
+    //jwt secret for access token
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+    }
+  );
+};
+
+userSchema.methods.generateRefreshToken = function () {
+  return jwt.sign(
+    //payload is low because its generates so many times
+    {
+      _id: this._id,
+    },
+    //jwt secret for refresh token
+    process.env.REFRESH_TOKEN_SECRET,
+    {
+      //here expiresIn is less time than access token always
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
+    }
+  );
+};
 export const User = mongoose.model("User", userSchema);
