@@ -1,7 +1,4 @@
 import { v2 as cloudinary } from "cloudinary";
-import { response } from "express";
-
-//fileSystem, its available in nodejs
 import fs from "fs";
 
 cloudinary.config({
@@ -13,13 +10,18 @@ cloudinary.config({
 const uploadOnCloudinary = async (localFilePath) => {
   try {
     if (!localFilePath) return null;
+    //upload the file on cloudinary
     const response = await cloudinary.uploader.upload(localFilePath, {
       resource_type: "auto",
     });
-    console.log("File is uploaded on cloudinary", response.url);
+    // file has been uploaded successfull
+    // console.log("file is uploaded on cloudinary ", response.url);
+    fs.unlinkSync(localFilePath)
     return response;
   } catch (error) {
-    fs.unlinkSync(localFilePath); //removes temporarily saved file from local storage
+    fs.unlinkSync(localFilePath); // remove the locally saved temporary file as the upload operation got failed
+    return null;
   }
 };
+
 export { uploadOnCloudinary };
