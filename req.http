@@ -1,2 +1,7 @@
 ###
 POST http://localhost:9000/user/register
+Content-Type: application/json
+
+{
+    "email":"abc@gmail.com"
+}
