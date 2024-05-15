@@ -1,6 +1,11 @@
 import { Router } from "express";
-import { registerUser, loginUser } from "../Controllers/users.controllers.js";
+import {
+  registerUser,
+  loginUser,
+  logoutUser,
+} from "../Controllers/users.controllers.js";
 import { upload } from "../Middlewares/multer.js";
+import { verifyJWT } from "../Middlewares/auth.js";
 
 const router = Router();
 
@@ -23,4 +28,6 @@ router.route("/login").post(
   //without this, error would raise because the req is of another type not json, and we get
   loginUser
 );
+
+router.route("/logout").post(verifyJWT, logoutUser);
 export default router;

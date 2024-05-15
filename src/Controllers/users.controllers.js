@@ -22,6 +22,8 @@ const generateAccessRefreshToken = async (userId) => {
     throw new ApiError(500, "Something went wrong, while generating tokens");
   }
 };
+
+//to register user
 const registerUser = asyncHandler(async (req, res) => {
   // console.log(req.body);
   const { fullname, email, username, password } = req.body;
@@ -141,8 +143,28 @@ const loginUser = asyncHandler(async (req, res) => {
     );
 });
 
+const logoutUser = asyncHandler(async (req, res) => {
+  await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        refreshToken: undefined,
+      },
+    },
+    {
+      new: true,
+    }
+  );
+  //set up cookie options
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
 
-const logoutUser = asyncHandler(async (req, res)=>{
-
-})
-export { registerUser, loginUser };
+  return res
+    .status(200)
+    .clearCookie("refreshToken", options)
+    .clearCookie("accessToken", options)
+    .json(new ApiResponse(200, {}, "User Logged Out"));
+});
+export { registerUser, loginUser, logoutUser };
