@@ -1,4 +1,13 @@
 ###
+POST http://localhost:9000/user/login
+Content-Type: application/json
+
+{
+    "email":"ssss@jdsha.ja",
+    "password":"1122"
+}
+
+###
 POST http://localhost:9000/user/register
 Content-Type: application/json
 
