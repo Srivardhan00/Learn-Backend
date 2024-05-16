@@ -197,9 +197,7 @@ const createAccessToken = asyncHandler(async (req, res) => {
       await generateAccessRefreshToken(user._id);
 
     //getting user from DB
-    const loggedIn = await User.findById(user._id).select(
-      "-password"
-    );
+    const loggedIn = await User.findById(user._id).select("-password");
 
     //set up cookie options
     //with these options only server can modify cookies
