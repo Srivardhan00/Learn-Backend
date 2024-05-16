@@ -3,7 +3,8 @@ import {
   registerUser,
   loginUser,
   logoutUser,
-  createAccessToken
+  createAccessToken,
+  changeCurrentPassword,
 } from "../Controllers/users.controllers.js";
 import { upload } from "../Middlewares/multer.js";
 import { verifyJWT } from "../Middlewares/auth.js";
@@ -32,7 +33,8 @@ router.route("/login").post(
 
 router.route("/logout").post(verifyJWT, logoutUser);
 
-router.route("/refresh-token").post(createAccessToken);
+router.route("/change-password").post(verifyJWT, changeCurrentPassword);
 
+router.route("/refresh-token").post(createAccessToken);
 
 export default router;
