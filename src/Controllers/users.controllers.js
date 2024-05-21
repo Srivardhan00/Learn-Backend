@@ -4,6 +4,7 @@ import { User } from "../Models/user.model.js";
 import { uploadOnCloudinary } from "../Utils/cloudinary.js";
 import { ApiResponse } from "../Utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 //to register user
 const registerUser = asyncHandler(async (req, res) => {
@@ -349,16 +350,19 @@ const updateCoverImage = asyncHandler(async (req, res) => {
 const getUserChannelProfile = asyncHandler(async (req, res) => {
   const { username } = req.params;
 
+  //empty username
   if (!username?.trim()) {
     throw new ApiError(400, "Username is Missing");
   }
 
   const channel = await User.aggregate([
+    //matching username
     {
       $match: {
         username: username?.toLowerCase(),
       },
     },
+    //searching the subscribers from subscriptions
     {
       $lookup: {
         from: "subscriptions",
@@ -367,6 +371,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         as: "subscribers",
       },
     },
+    //searching the channels subscribed from subscriptions
     {
       $lookup: {
         from: "subscriptions",
@@ -375,6 +380,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         as: "subscribedTo",
       },
     },
+    //adding new fields to send response
     {
       $addFields: {
         subscribersCount: {
@@ -392,6 +398,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         },
       },
     },
+    //projecting only necessary info
     {
       $project: {
         fullname: 1,
@@ -405,6 +412,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     },
   ]);
 
+  //if not found
   if (!channel?.length) {
     throw new ApiError(400, "Channel does not exist");
   }
@@ -413,6 +421,69 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(200, channel[0], "User Channel Fetched Successfully")
     );
+  //channel[0]  because it contains all the required info as an object, channel here is an array
+});
+
+const getWatchHistory = asyncHandler(async (req, res) => {
+  //mongoDB id is in form ObjectId('48454555')
+  //here user._id would give the string only, but mongoose would convert it to above form and handle
+  //but it doesn't work in pipelines, so we create new Object with id and use it for operations
+
+  const user = await User.aggregate([
+    {
+      //to get user details
+      $match: {
+        _id: new mongoose.Types.ObjectId(req.user._id),
+      },
+    },
+    {
+      //to get video details from user's watchHistory array
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
+            //fro video details, we get user details of owner
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  //we project only required details of the owner
+                  $project: {
+                    fullname: 1,
+                    username: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          //we add a new field to user, an object of above details
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      //we send only watchHistory from the user array
+      user[0].watchHistory,
+      "Watch History fetched successfully"
+    )
+  );
 });
 
 export {
@@ -425,4 +496,6 @@ export {
   updateDetails,
   updateAvatar,
   updateCoverImage,
+  getUserChannelProfile,
+  getWatchHistory,
 };
